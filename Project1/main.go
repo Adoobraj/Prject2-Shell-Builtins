@@ -129,55 +129,137 @@ func FCFSSchedule(w io.Writer, title string, processes []Process) {
 }
 
 func SJFPrioritySchedule(w io.Writer, title string, processes []Process) { 
-	var (
-		serviceTime     int64
-
-		totalWait       float64
-		totalTurnaround float64
-		lastCompletion  float64
-		waitingTime     int64
-		schedule        = make([][]string, len(processes))
-		gantt           = make([]TimeSlice, 0)
-		Arr				= make([]int{}
-	)
-	for i := range processes {
-		
-		Arr = append(Arr, process[i].BurstDuration)
-		
-
-		sort.Ints(Arr)
-
-		schedule[i] = []string{
-			fmt.Sprint(processes[i].ProcessID),
-			fmt.Sprint(processes[i].Priority),
-			fmt.Sprint(processes[i].BurstDuration),
-			fmt.Sprint(processes[i].ArrivalTime),
-			fmt.Sprint(waitingTime),
-			fmt.Sprint(turnaround),
-			fmt.Sprint(completion),
-		}
-		serviceTime += processes[i].BurstDuration
-
-		gantt = append(gantt, TimeSlice{
-			PID:   processes[i].ProcessID,
-			Start: start,
-			Stop:  serviceTime,
-		})
+   
+	var processes []Process
+	for _, row := range rows {
+		process := Process{}
+		process.ProcessID, _ = strconv.ParseInt(row[0], 10, 64)
+		process.ArrivalTime, _ = strconv.ParseInt(row[1], 10, 64)
+		process.BurstDuration, _ = strconv.ParseInt(row[2], 10, 64)
+		process.Priority, _ = strconv.ParseInt(row[3], 10, 64)
+		processes = append(processes, process)
 	}
 
-	count := float64(len(processes))
-	aveWait := totalWait / count
-	aveTurnaround := totalTurnaround / count
-	aveThroughput := count / lastCompletion
+    // Sort the processes by arrival time
+    sort.Slice(processes, func(i, j int) bool {
+        return processes[i].ArrivalTime < processes[j].ArrivalTime
+    })
 
-	outputTitle(w, title)
-	outputGantt(w, gantt)
-	outputSchedule(w, schedule, aveWait, aveTurnaround, aveThroughput)
+    // Initialize the ready queue, current time, and current process
+    var readyQueue []Process
+    currentTime := 0
+    var currentProcess *Process
+
+    // Loop until all processes have completed
+    for len(processes) > 0 || len(readyQueue) > 0 || currentProcess != nil {
+        // Move any arriving processes to the ready queue
+        for len(processes) > 0 && processes[0].ArrivalTime == currentTime {
+            readyQueue = append(readyQueue, processes[0])
+            processes = processes[1:]
+        }
+
+        // If there is no current process, select the shortest process from the ready queue
+        if currentProcess == nil && len(readyQueue) > 0 {
+            shortestIndex := 0
+            for i := 1; i < len(readyQueue); i++ {
+                if readyQueue[i].RemainingTime < readyQueue[shortestIndex].RemainingTime {
+                    shortestIndex = i
+                }
+            }
+            currentProcess = &readyQueue[shortestIndex]
+            readyQueue = append(readyQueue[:shortestIndex], readyQueue[shortestIndex+1:]...)
+        }
+
+        // If there is a current process, check if any shorter process has arrived
+        if currentProcess != nil {
+            for i := range processes {
+                if processes[i].ArrivalTime > currentTime {
+                    break
+                }
+                if processes[i].RemainingTime < currentProcess.RemainingTime {
+                    readyQueue = append(readyQueue, *currentProcess)
+                    *currentProcess = processes[i]
+                    processes = append(processes[:i], processes[i+1:]...)
+                    break
+                }
+            }
+        }
+
+        // Execute the current process for one time unit
+        if currentProcess != nil {
+            currentProcess.RemainingTime--
+            if currentProcess.RemainingTime == 0 {
+                currentProcess = nil
+            }
+        }
+
+        // Increment the waiting time of processes in the ready queue
+        for i := range readyQueue {
+            readyQueue[i].Waiting
+            Time++
+        }
+    }
+
+    // Calculate the total waiting time and print the results
+    var totalWaitingTime int
+    for i := range processes {
+        totalWaitingTime += processes[i].WaitingTime
+    }
+    
+    averageWaitingTime := float64(totalWaitingTime) / float64(len(processes))
+    fmt.Printf("Average waiting time: %.2f\n", averageWaitingTime)
 }
 //
 //func SJFSchedule(w io.Writer, title string, processes []Process) { }
 //
-//func RRSchedule(w io.Writer, title string, processes []Process) { }
+func RRSchedule(w io.Writer, title string, processes []Process) { 
+	ar processes []Process
+	for _, row := range rows {
+		process := Process{}
+		process.ProcessID, _ = strconv.ParseInt(row[0], 10, 64)
+		process.ArrivalTime, _ = strconv.ParseInt(row[1], 10, 64)
+		process.BurstDuration, _ = strconv.ParseInt(row[2], 10, 64)
+		process.Priority, _ = strconv.ParseInt(row[3], 10, 64)
+		processes = append(processes, process)
+	}
+
+	// Round Robin algorithm
+	timeQuantum := int64(2) // Set the time quantum to 2
+	currentTime := int64(0) // Start at time 0
+	totalWaitTime := int64(0)
+
+	for {
+		done := true
+		for _, process := range processes {
+			if process.BurstDuration > 0 {
+				done = false
+				if process.ArrivalTime <= currentTime {
+					fmt.Printf("Processing process %v at time %v with burst duration %v\n", process.ProcessID, currentTime, process.BurstDuration)
+					if process.BurstDuration <= timeQuantum {
+						// The process finishes within the time quantum
+						currentTime += process.BurstDuration
+						totalWaitTime += currentTime - process.ArrivalTime - process.BurstDuration
+						process.BurstDuration = 0
+					} else {
+						// The process does not finish within the time quantum
+						currentTime += timeQuantum
+						process.BurstDuration -= timeQuantum
+					}
+				}
+			}
+		}
+		if done {
+			break
+		}
+	}
+
+	// Print the average waiting time
+	averageWaitTime := float64(totalWaitTime) / float64(len(processes))
+	fmt.Printf("Average waiting time: %v\n", averageWaitTime)
+}
+}
+
+
 
 //endregion
 
