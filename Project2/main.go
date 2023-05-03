@@ -13,11 +13,12 @@ import (
 )
 
 func main() {
+	history := []string{}
 	exit := make(chan struct{}, 2) // buffer this so there's no deadlock.
 	runLoop(os.Stdin, os.Stdout, os.Stderr, exit)
 }
 
-func runLoop(r io.Reader, w, errW io.Writer, exit chan struct{}) {
+func runLoop(r io.Reader, w, errW io.Writer, exit chan struct{}, history *[]string) {
 	var (
 		input    string
 		err      error
@@ -66,6 +67,9 @@ func printPrompt(w io.Writer) error {
 func handleInput(w io.Writer, input string, exit chan<- struct{}) error {
 	// Remove trailing spaces.
 	input = strings.TrimSpace(input)
+	
+	// Save input to history
+	*history = append(*history, input)
 
 	// Split the input separate the command name and the command arguments.
 	args := strings.Split(input, " ")
@@ -85,6 +89,8 @@ func handleInput(w io.Writer, input string, exit chan<- struct{}) error {
 	case "exit":
 		exit <- struct{}{}
 		return nil
+	case "history":
+		return showHistory(w, history)
 	}
 
 	return executeCommand(name, args...)
@@ -100,4 +106,18 @@ func executeCommand(name string, arg ...string) error {
 
 	// Execute the command and return the error.
 	return cmd.Run()
+}
+
+func showHistory(w, io.Writer, history *[]string) error {
+	_, err := fmt.Fprintf(w, "Command history:\n")
+	if err != nil {
+		return err
+	}
+	for i, cmd := range *history {
+		_, err := fmt.Fprintf(w, "%d: %s\n", i+1, cmd)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
