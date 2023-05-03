@@ -44,8 +44,9 @@ func Test_runLoop(t *testing.T) {
 			errW := &bytes.Buffer{}
 
 			exit := make(chan struct{}, 2)
+			history := []string{}
 			// run the loop for 10ms
-			go runLoop(tt.args.r, w, errW, exit)
+			go runLoop(tt.args.r, w, errW, exit, history)
 			time.Sleep(10 * time.Millisecond)
 			exit <- struct{}{}
 
