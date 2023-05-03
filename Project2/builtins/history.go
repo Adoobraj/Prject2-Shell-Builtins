@@ -1,12 +1,12 @@
-package main
+package builtins
 
 import (
 	"fmt"
 	"os"
-	"strconv"
+	//"strconv"
 )
 
-func main() {
+func history() {
 	history := []string{}
 
 	for {
