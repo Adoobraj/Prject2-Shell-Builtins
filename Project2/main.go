@@ -9,7 +9,8 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/jh125486/CSCE4600/Project2/builtins"
+	//"github.com/jh125486/CSCE4600/Project2/builtins"
+	"./builtins" //location of builtins folder
 )
 
 func main() {
