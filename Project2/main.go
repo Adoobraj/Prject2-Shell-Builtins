@@ -20,7 +20,7 @@ func main() {
 }
 
 func runLoop(r io.Reader, w, errW io.Writer, exit chan struct{}, history []string) {
-	
+
 	var (
 		input    string
 		err      error
@@ -66,7 +66,7 @@ func printPrompt(w io.Writer) error {
 	return err
 }
 
-func handleInput(w io.Writer, input string, exit chan<- struct{},  history *[]string) error {
+func handleInput(w io.Writer, input string, exit chan<- struct{}, history *[]string) error {
 	// Remove trailing spaces.
 	input = strings.TrimSpace(input)
 
@@ -88,6 +88,8 @@ func handleInput(w io.Writer, input string, exit chan<- struct{},  history *[]st
 		return builtins.PrintWorkingDirectory(w)
 	case "mkdir":
 		return builtins.Mkdir(args...)
+	case "ls":
+		return builtins.ls(args...)
 	case "exit":
 		exit <- struct{}{}
 		return nil
