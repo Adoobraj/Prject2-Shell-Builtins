@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func ls(args ...string) error {
+func Ls(args ...string) error {
 	var dir string
 	if len(args) == 0 {
 		// No arguments, list contents of current directory.
