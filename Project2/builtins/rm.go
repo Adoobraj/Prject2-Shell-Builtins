@@ -6,14 +6,19 @@ import (
    "os"
 )
 
-func main() {
-   // Delete the file named "file.txt".
-   err := os.Remove("file.txt")
-   if err != nil {
-       fmt.Println(err)
-       return
+func RemoveFile(args ...string) error {
+   
+   if len(args) == 0 {
+      return fmt.Errorf("usage: rm <filename>")
    }
-   fmt.Println("File successfully deleted")
+   
+   filename := args[0]
+   err := os.Remove(filename)
+   if err != nil{
+      return err
+   }
+   
+   return nil
 }
 
  
