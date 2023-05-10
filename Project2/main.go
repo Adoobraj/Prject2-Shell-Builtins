@@ -95,6 +95,8 @@ func handleInput(w io.Writer, input string, exit chan<- struct{}, history *[]str
 		return nil
 	case "history":
 		return showHistory(w, history)
+	case "rm":
+		return builtins.main(args...)
 	}
 
 	return executeCommand(name, args...)
