@@ -89,7 +89,7 @@ func handleInput(w io.Writer, input string, exit chan<- struct{}, history *[]str
 	case "mkdir":
 		return builtins.Mkdir(args...)
 	case "ls":
-		return builtins.ls(args...)
+		return builtins.Ls(args...)
 	case "exit":
 		exit <- struct{}{}
 		return nil
